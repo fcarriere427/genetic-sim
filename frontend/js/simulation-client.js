@@ -27,6 +27,7 @@ class SimulationClient {
       reconnectionDelayMax: 5000,
       timeout: 20000,
       transports: ['polling', 'websocket'],
+      forceNew: true
     });
     console.log("Tentative de connexion Socket.IO à:", window.location.origin, "avec path:", path);
         
