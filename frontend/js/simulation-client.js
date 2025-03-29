@@ -21,9 +21,12 @@ class SimulationClient {
     // Connexion Socket.IO - définir explicitement l'URL du serveur local
     this.socket = io(window.location.origin, {
       path: path,
-      reconnectionAttempts: 5,
-      timeout: 10000,
-      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+      transports: ['polling', 'websocket'],
     });
     console.log("Tentative de connexion Socket.IO à:", window.location.origin, "avec path:", path);
         
@@ -58,6 +61,17 @@ class SimulationClient {
     
     this.socket.on('connect_error', (error) => {
       console.error('Erreur de connexion Socket.IO:', error);
+      // Tenter de recréer le socket après un délai
+      setTimeout(() => {
+        console.log('Tentative de reconnexion...');
+        this.socket.connect();
+      }, 3000);
+    });
+
+    this.socket.on('heartbeat', (data) => {
+      console.log('Heartbeat reçu:', data.timestamp);
+      // Répondre au heartbeat
+      this.socket.emit('heartbeat-response', { timestamp: Date.now() });
     });
     
     this.socket.on('simulation-update', (state) => {

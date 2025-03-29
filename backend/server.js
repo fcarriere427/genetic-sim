@@ -53,8 +53,23 @@ app.post('/api/simulations', async (req, res) => {
 
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
-  console.log('Nouveau client connecté');
-  
+  console.log('Nouveau client connecté:', socket.id);
+
+  // Déconnecter les clients inactifs après 5 minutes
+  const activityTimeout = setTimeout(() => {
+    console.log('Client inactif déconnecté:', socket.id);
+    socket.disconnect(true);
+  }, 5 * 60 * 1000);
+
+   // Réinitialiser le timeout à chaque activité
+   socket.on('any-event', () => {
+    clearTimeout(activityTimeout);
+    // Redémarrer le timer
+    activityTimeout = setTimeout(() => {
+      socket.disconnect(true);
+    }, 5 * 60 * 1000);
+  });
+
   // Démarrer la simulation
   socket.on('start-simulation', (config) => {
     console.log('Démarrage de la simulation avec config:', config);
@@ -93,6 +108,12 @@ io.on('connection', (socket) => {
     console.log('Client déconnecté');
   });
 });
+
+// Envoyer un heartbeat toutes les 30 secondes pour maintenir les connexions actives
+setInterval(() => {
+  io.emit('heartbeat', { timestamp: Date.now() });
+  console.log('Heartbeat envoyé à', io.engine.clientsCount, 'clients');
+}, 30000);
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
