@@ -79,11 +79,21 @@ class SimulationClient {
       console.log('Mise à jour de simulation reçue:', state.generation);
       this.simulationState = state;
       
-      // Mise à jour des données de graphique
-      if (this.fitnessData.generations.indexOf(state.generation) === -1) {
-        this.fitnessData.generations.push(state.generation);
-        this.fitnessData.bestFitness.push(state.statistics.bestFitness);
-        this.fitnessData.avgFitness.push(state.statistics.averageFitness);
+      // Mise à jour des données de graphique - uniquement si les valeurs sont significatives
+      if (state.statistics && state.statistics.bestFitness > 0) {
+        // Vérifier si cette génération existe déjà dans nos données
+        const genIndex = this.fitnessData.generations.indexOf(state.generation);
+        
+        if (genIndex === -1) {
+          // Nouvelle génération
+          this.fitnessData.generations.push(state.generation);
+          this.fitnessData.bestFitness.push(state.statistics.bestFitness);
+          this.fitnessData.avgFitness.push(state.statistics.averageFitness);
+        } else {
+          // Mise à jour d'une génération existante
+          this.fitnessData.bestFitness[genIndex] = state.statistics.bestFitness;
+          this.fitnessData.avgFitness[genIndex] = state.statistics.averageFitness;
+        }
         
         this.updateChart();
       }

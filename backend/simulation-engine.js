@@ -414,11 +414,12 @@ function mutateGenome(genome, mutationRate) {
  * Calcule le fitness d'un organisme
  */
 function calculateFitness(organism) {
-  // Formule de fitness basée sur l'âge, l'énergie, la nourriture consommée et les descendants
-  return organism.age + 
+  // Formule de fitness plus robuste avec plus de poids sur la nourriture et les descendants
+  return Math.max(0, // Toujours positif
+         organism.age + 
          organism.energy * 0.5 + 
-         organism.foodEaten * 10 + 
-         organism.children * 15;
+         organism.foodEaten * 20 +  // Doubler la valeur de la nourriture mangée
+         organism.children * 30);   // Doubler la valeur des descendants
 }
 
 /**
@@ -435,6 +436,9 @@ function createNewGeneration(simulation) {
   
   // Augmenter le compteur de génération
   simulation.generation++;
+  
+  // Conserver les meilleures statistiques pour l'historique du graphique
+  const prevStats = { ...simulation.statistics };
   
   // Si la population est vide, créer une nouvelle population initiale
   if (simulation.population.length === 0) {
@@ -461,12 +465,9 @@ function createNewGeneration(simulation) {
  * Met à jour les statistiques de la simulation
  */
 function updateStatistics(simulation) {
+  // Conserver les valeurs précédentes si la population est vide
   if (simulation.population.length === 0) {
-    simulation.statistics = {
-      bestFitness: 0,
-      averageFitness: 0,
-      worstFitness: 0
-    };
+    // Ne pas réinitialiser à zéro, conserver les statistiques précédentes
     return;
   }
   
