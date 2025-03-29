@@ -47,6 +47,8 @@ function createSimulation(config = {}) {
     environment,
     population,
     generation: 0,
+    generationAge: 0,  // Suivre l'âge d'une génération
+    generationMaxAge: 1000, // Durée de vie maximale d'une génération
     statistics: {
       bestFitness: 0,
       averageFitness: 0,
@@ -150,6 +152,9 @@ function updateSimulation(simulation) {
     return simulation;
   }
   
+  // Incrémenter l'âge de la génération
+  simulation.generationAge += simulationSpeed;
+  
   // Mettre à jour chaque organisme
   simulation.population.forEach(organism => {
     if (organism.isDead) return;
@@ -206,9 +211,19 @@ function updateSimulation(simulation) {
   // Nettoyer les organismes morts
   simulation.population = simulation.population.filter(org => !org.isDead);
   
-  // Si tous les organismes sont morts, créer une nouvelle génération
-  if (simulation.population.length === 0) {
+  // Créer une nouvelle génération si:
+  // 1. Tous les organismes sont morts
+  // 2. La génération a atteint son âge maximal
+  // 3. La nourriture est presque épuisée
+  const foodConsumedRatio = simulation.environment.foodSources.filter(f => f.isConsumed).length / 
+                           simulation.environment.foodSources.length;
+
+  if (simulation.population.length === 0 ||
+      simulation.generationAge >= simulation.generationMaxAge ||
+      foodConsumedRatio > 0.9) {
     createNewGeneration(simulation);
+    // Réinitialiser l'âge de la génération
+    simulation.generationAge = 0;
   }
   
   // Mettre à jour les statistiques
@@ -421,12 +436,24 @@ function createNewGeneration(simulation) {
   // Augmenter le compteur de génération
   simulation.generation++;
   
-  // Créer une nouvelle population
-  simulation.population = createInitialPopulation(
-    simulation.config.populationSize,
-    simulation.environment
-  );
+  // Si la population est vide, créer une nouvelle population initiale
+  if (simulation.population.length === 0) {
+    simulation.population = createInitialPopulation(
+      simulation.config.populationSize,
+      simulation.environment
+    );
+    console.log(`Nouvelle génération ${simulation.generation} créée avec une population initiale`);
+    return previousGen;
+  }
   
+  // Régénérer la nourriture pour la nouvelle génération
+  simulation.environment.foodSources.forEach(food => {
+    food.isConsumed = false;
+    food.x = Math.random() * simulation.environment.width;
+    food.y = Math.random() * simulation.environment.height;
+  });
+
+  console.log(`Génération ${simulation.generation} créée avec évolution de la population`);
   return previousGen;
 }
 
