@@ -49,6 +49,7 @@ function createSimulation(config = {}) {
     generation: 0,
     generationAge: 0,  // Suivre l'âge d'une génération
     generationMaxAge: 1000, // Durée de vie maximale d'une génération
+    fitnessHistory: [],  // Historique des fitness pour la génération actuelle
     statistics: {
       bestFitness: 0,
       averageFitness: 0,
@@ -490,6 +491,9 @@ function createNewGeneration(simulation) {
   // Conserver les meilleures statistiques pour l'historique du graphique
   const prevStats = { ...simulation.statistics };
   
+  // Réinitialiser l'historique des fitness pour la nouvelle génération
+  simulation.fitnessHistory = [];
+  
   // Si la population est vide, créer une nouvelle population initiale
   if (simulation.population.length === 0) {
     simulation.population = createInitialPopulation(
@@ -521,13 +525,43 @@ function updateStatistics(simulation) {
     return;
   }
   
-  // Calculer la fitness pour tous les organismes
+  // Calculer la fitness pour tous les organismes vivants actuels
   const fitnesses = simulation.population.map(org => org.fitness);
   
+  // Échantillonnage périodique - ajouter à l'historique toutes les 10 itérations
+  // pour éviter que l'historique ne devienne trop volumineux
+  if (simulation.generationAge % 10 === 0) {
+    simulation.fitnessHistory = simulation.fitnessHistory.concat(fitnesses);
+  }
+  
+  // Si l'historique devient trop volumineux (plus de 1000 entrées),
+  // conserver seulement les 1000 entrées les plus récentes
+  if (simulation.fitnessHistory.length > 1000) {
+    simulation.fitnessHistory = simulation.fitnessHistory.slice(
+      simulation.fitnessHistory.length - 1000
+    );
+  }
+  
+  // Trouver le meilleur fitness de tous les temps pour cette génération
+  const bestFitness = Math.max(
+    Math.max(...fitnesses), // Meilleur fitness actuel
+    simulation.fitnessHistory.length > 0 
+      ? Math.max(...simulation.fitnessHistory) 
+      : 0 // Meilleur fitness dans l'historique
+  );
+  
+  // Calculer la moyenne sur l'ensemble de l'historique de la génération
+  // ainsi que sur les organismes vivants actuels
+  const allFitnesses = simulation.fitnessHistory.concat(fitnesses);
+  const averageFitness = allFitnesses.length > 0
+    ? allFitnesses.reduce((a, b) => a + b, 0) / allFitnesses.length
+    : 0;
+  
+  // Mettre à jour les statistiques
   simulation.statistics = {
-    bestFitness: Math.max(...fitnesses),
-    averageFitness: fitnesses.reduce((a, b) => a + b, 0) / fitnesses.length,
-    worstFitness: Math.min(...fitnesses)
+    bestFitness,
+    averageFitness,
+    worstFitness: Math.min(...fitnesses) // Fitness le plus bas parmi les organismes actuels
   };
 }
 
