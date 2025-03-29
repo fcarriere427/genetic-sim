@@ -127,18 +127,31 @@ class SimulationClient {
    */
   async loadSimulationHistory() {
     try {
+      console.log('Tentative de chargement de l\'historique...');
       const response = await fetch('/api/simulations');
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.warn('Réponse non-OK du serveur:', response.status);
+        return [];
       }
+      
+      // Vérifier le type de contenu
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Réponse non-JSON reçue:', contentType);
+        return [];
+      }
+      
       this.simulationHistory = await response.json();
+      console.log('Historique chargé avec succès:', this.simulationHistory);
       return this.simulationHistory;
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
       return [];
     }
   }
-  
+
+
   /**
    * Sauvegarder la simulation actuelle
    * @param {string} name - Nom de la simulation
