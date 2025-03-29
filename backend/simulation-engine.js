@@ -137,7 +137,8 @@ function createOrganism(environment, id) {
     foodEaten: 0,
     children: 0,
     isDead: false,
-    fitness: 0
+    fitness: 0,
+    justReproduced: 0  // Initialisation à 0 (pas de reproduction récente)
   };
 }
 
@@ -158,6 +159,12 @@ function updateSimulation(simulation) {
   // Mettre à jour chaque organisme
   simulation.population.forEach(organism => {
     if (organism.isDead) return;
+    
+    // Décrémenter le marqueur de reproduction s'il existe
+    if (organism.justReproduced > 0) {
+      organism.justReproduced -= simulationSpeed;
+      if (organism.justReproduced < 0) organism.justReproduced = 0;
+    }
     
     // Appliquer le métabolisme (consommation d'énergie au repos)
     organism.energy -= organism.genome.metabolism * simulationSpeed;
@@ -208,6 +215,9 @@ function updateSimulation(simulation) {
   // Régénérer la nourriture consommée occasionnellement
   regenerateFood(simulation.environment);
   
+  // Gérer les collisions entre organismes
+  handleOrganismCollisions(simulation.population, simulation.environment);
+  
   // Nettoyer les organismes morts
   simulation.population = simulation.population.filter(org => !org.isDead);
   
@@ -246,45 +256,81 @@ function moveOrganism(organism, environment) {
   const dx = Math.cos(organism.direction) * speed;
   const dy = Math.sin(organism.direction) * speed;
   
-  // Appliquer le déplacement
-  organism.x += dx;
-  organism.y += dy;
+  // Nouvelle position potentielle
+  const newX = organism.x + dx;
+  const newY = organism.y + dy;
   
   // Consommer de l'énergie pour le mouvement
   organism.energy -= 0.1 * speed;
   
-  // Limites de l'environnement (rebondissement)
-  if (organism.x < 0) {
-    organism.x = 0;
+  // Gérer les collisions avec les limites de l'environnement
+  let collision = false;
+  
+  // Collision avec les bords en tenant compte de la taille
+  if (newX - organism.genome.size < 0) {
+    organism.x = organism.genome.size; // Positionner à la marge de la taille
     organism.direction = Math.PI - organism.direction;
-  }
-  if (organism.x > environment.width) {
-    organism.x = environment.width;
+    collision = true;
+  } else if (newX + organism.genome.size > environment.width) {
+    organism.x = environment.width - organism.genome.size;
     organism.direction = Math.PI - organism.direction;
+    collision = true;
+  } else {
+    organism.x = newX; // Déplacer si pas de collision
   }
-  if (organism.y < 0) {
-    organism.y = 0;
+  
+  if (newY - organism.genome.size < 0) {
+    organism.y = organism.genome.size;
     organism.direction = -organism.direction;
-  }
-  if (organism.y > environment.height) {
-    organism.y = environment.height;
+    collision = true;
+  } else if (newY + organism.genome.size > environment.height) {
+    organism.y = environment.height - organism.genome.size;
     organism.direction = -organism.direction;
+    collision = true;
+  } else {
+    organism.y = newY; // Déplacer si pas de collision
   }
   
   // Détection de collision avec les obstacles
   environment.obstacles.forEach(obstacle => {
-    if (
-      organism.x > obstacle.x - organism.genome.size &&
-      organism.x < obstacle.x + obstacle.width + organism.genome.size &&
-      organism.y > obstacle.y - organism.genome.size &&
-      organism.y < obstacle.y + obstacle.height + organism.genome.size
-    ) {
-      // Rebondir dans la direction opposée
-      organism.direction += Math.PI;
-      organism.x += Math.cos(organism.direction) * speed * 2;
-      organism.y += Math.sin(organism.direction) * speed * 2;
+    // Vérifier les quatre côtés de l'obstacle
+    const leftEdge = obstacle.x;
+    const rightEdge = obstacle.x + obstacle.width;
+    const topEdge = obstacle.y;
+    const bottomEdge = obstacle.y + obstacle.height;
+    
+    // Distance minimale entre le centre de l'organisme et les bords de l'obstacle
+    const distX = Math.max(leftEdge - organism.x, 0, organism.x - rightEdge);
+    const distY = Math.max(topEdge - organism.y, 0, organism.y - bottomEdge);
+    
+    // Détection de collision
+    if (Math.sqrt(distX * distX + distY * distY) < organism.genome.size ||
+        (organism.x >= leftEdge - organism.genome.size && 
+         organism.x <= rightEdge + organism.genome.size &&
+         organism.y >= topEdge - organism.genome.size &&
+         organism.y <= bottomEdge + organism.genome.size)) {
+      
+      // Déterminer dans quelle direction pousser l'organisme
+      // Trouver la direction de la force de répulsion
+      const centerX = obstacle.x + obstacle.width / 2;
+      const centerY = obstacle.y + obstacle.height / 2;
+      
+      // Direction depuis le centre de l'obstacle vers l'organisme
+      const repulsionAngle = Math.atan2(organism.y - centerY, organism.x - centerX);
+      
+      // Déplacer l'organisme en dehors de l'obstacle
+      const pushDistance = organism.genome.size + 1; // Un peu plus que la taille
+      organism.x = organism.x + Math.cos(repulsionAngle) * pushDistance;
+      organism.y = organism.y + Math.sin(repulsionAngle) * pushDistance;
+      
+      // Rebondir dans une direction similaire à la force de répulsion
+      organism.direction = repulsionAngle + (Math.random() - 0.5) * (Math.PI / 4);
+      
+      collision = true;
     }
   });
+  
+  return collision; // Retourne true si une collision a eu lieu
 }
 
 /**
@@ -354,8 +400,12 @@ function reproduceOrganism(parent, simulation) {
     foodEaten: 0,
     children: 0,
     isDead: false,
-    fitness: 0
+    fitness: 0,
+    justReproduced: 50  // Marqueur visuel qui durera 50 cycles
   };
+  
+  // Marquer le parent comme venant de se reproduire
+  parent.justReproduced = 50;  // Durera 50 cycles
   
   // Réduire l'énergie du parent
   parent.energy *= 0.7;
@@ -501,3 +551,76 @@ module.exports = {
   togglePause,
   setSimulationSpeed
 };
+
+/**
+ * Vérifie et gère les collisions entre les organismes
+ */
+function handleOrganismCollisions(organisms, environment) {
+  // Parcourir tous les organismes
+  for (let i = 0; i < organisms.length; i++) {
+    const org1 = organisms[i];
+    if (org1.isDead) continue;
+    
+    // Comparer avec tous les autres organismes
+    for (let j = i + 1; j < organisms.length; j++) {
+      const org2 = organisms[j];
+      if (org2.isDead) continue;
+      
+      // Calculer la distance entre les deux organismes
+      const dx = org2.x - org1.x;
+      const dy = org2.y - org1.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Distance minimale pour éviter la collision (somme des rayons)
+      const minDistance = org1.genome.size + org2.genome.size;
+      
+      // Si collision
+      if (distance < minDistance) {
+        // Déterminer la direction de la force de répulsion
+        const angle = Math.atan2(dy, dx);
+        
+        // Force proportionnelle à la pénétration
+        const overlap = minDistance - distance;
+        
+        // Déplacer les organismes
+        const moveRatio1 = org2.genome.size / (org1.genome.size + org2.genome.size);
+        const moveRatio2 = org1.genome.size / (org1.genome.size + org2.genome.size);
+        
+        // Déplacer org1 à l'opposé de org2
+        org1.x -= Math.cos(angle) * overlap * moveRatio1;
+        org1.y -= Math.sin(angle) * overlap * moveRatio1;
+        
+        // Déplacer org2 à l'opposé de org1
+        org2.x += Math.cos(angle) * overlap * moveRatio2;
+        org2.y += Math.sin(angle) * overlap * moveRatio2;
+        
+        // Ajustement des directions (rebond léger)
+        org1.direction = Math.atan2(-Math.sin(angle), -Math.cos(angle));
+        org2.direction = Math.atan2(Math.sin(angle), Math.cos(angle));
+        
+        // Vérifier que les organismes restent dans les limites après la répulsion
+        constrainToEnvironment(org1, environment);
+        constrainToEnvironment(org2, environment);
+      }
+    }
+  }
+}
+
+/**
+ * Maintient un organisme dans les limites de l'environnement
+ */
+function constrainToEnvironment(organism, environment) {
+  // Limites gauche/droite
+  if (organism.x - organism.genome.size < 0) {
+    organism.x = organism.genome.size;
+  } else if (organism.x + organism.genome.size > environment.width) {
+    organism.x = environment.width - organism.genome.size;
+  }
+  
+  // Limites haut/bas
+  if (organism.y - organism.genome.size < 0) {
+    organism.y = organism.genome.size;
+  } else if (organism.y + organism.genome.size > environment.height) {
+    organism.y = environment.height - organism.genome.size;
+  }
+}

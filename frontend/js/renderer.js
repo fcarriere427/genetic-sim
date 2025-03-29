@@ -98,7 +98,27 @@ class SimulationRenderer {
       if (organism.isDead) return;
       
       // Couleur basée sur le génome
-      const color = `rgb(${organism.genome.color[0]}, ${organism.genome.color[1]}, ${organism.genome.color[2]})`;
+      let color;
+      
+      // Si l'organisme vient de se reproduire, le colorer en rouge
+      if (organism.justReproduced > 0) {
+        // Interpoler entre rouge (#ff0000) et la couleur d'origine en fonction du temps restant
+        const ratio = organism.justReproduced / 50; // 50 étant la durée totale du marqueur
+        const r = Math.min(255, Math.round(255 * ratio + organism.genome.color[0] * (1 - ratio)));
+        const g = Math.round(organism.genome.color[1] * (1 - ratio));
+        const b = Math.round(organism.genome.color[2] * (1 - ratio));
+        color = `rgb(${r}, ${g}, ${b})`;
+        
+        // Ajouter un message visuel pour la reproduction
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = '10px Arial';
+        this.ctx.fillText('❤', // Symbole coeur
+          organism.x * scaleX,
+          (organism.y - organism.genome.size - 10) * scaleY
+        );
+      } else {
+        color = `rgb(${organism.genome.color[0]}, ${organism.genome.color[1]}, ${organism.genome.color[2]})`;
+      }
       
       // Corps
       this.ctx.fillStyle = color;
