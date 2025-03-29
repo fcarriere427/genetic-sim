@@ -4,7 +4,6 @@
  */
 class SimulationClient {
   constructor() {
-    console.log("Tentative de connexion Socket.IO à:", window.location.origin);
     // Vérifier que io est défini avant de l'utiliser
     if (typeof io === 'undefined') {
       console.error('Socket.IO n\'est pas chargé. Vérifiez la connexion au réseau ou le chargement de la bibliothèque.');
