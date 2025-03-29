@@ -31,14 +31,25 @@ h1, h2, h3 {
 }
 
 /* Layout des conteneurs */
+.simulation-container {
+  margin-bottom: 1rem;
+}
+
+#simulationCanvas {
+  width: 100%;
+  background-color: #222;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 500px; /* Augmenter la hauteur du canvas */
+}
+
 .controls-container {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.simulation-controls, 
-.simulation-config {
+.simulation-controls {
   flex: 1;
   background-color: white;
   border-radius: 5px;
@@ -46,21 +57,15 @@ h1, h2, h3 {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.simulation-container {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-#simulationCanvas {
-  flex: 2;
-  background-color: #222;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  height: 400px;
-}
-
 .stats-container {
+  flex: 1;
+  background-color: white;
+  border-radius: 5px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.simulation-config {
   flex: 1;
   background-color: white;
   border-radius: 5px;
@@ -209,13 +214,28 @@ footer {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .controls-container,
-  .simulation-container {
+@media (max-width: 1024px) {
+  .controls-container {
     flex-direction: column;
   }
   
+  .simulation-controls,
+  .stats-container,
+  .simulation-config {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
   #simulationCanvas {
-    height: 300px;
+    height: 350px;
+  }
+  
+  .stat-group {
+    flex-direction: column;
+  }
+  
+  .stat {
+    margin-bottom: 0.5rem;
   }
 }

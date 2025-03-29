@@ -14,7 +14,14 @@
   </header>
   
   <main>
+    <!-- Simulation container en haut -->    
+    <div class="simulation-container">
+      <canvas id="simulationCanvas"></canvas>
+    </div>
+
+    <!-- Nouvelle disposition des contrôles et stats -->    
     <div class="controls-container">
+      <!-- Panneau de contrôles réduit à gauche -->      
       <div class="simulation-controls">
         <h2>Contrôles</h2>
         <div class="control-group">
@@ -29,6 +36,35 @@
         </div>
       </div>
       
+      <!-- Panneau de statistiques au milieu -->      
+      <div class="stats-container">
+        <h2>Statistiques</h2>
+        <div class="stat-group">
+          <div class="stat">
+            <span class="stat-label">Génération:</span>
+            <span id="generationValue" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Population:</span>
+            <span id="populationValue" class="stat-value">0</span>
+          </div>
+        </div>
+        <div class="stat-group">
+          <div class="stat">
+            <span class="stat-label">Meilleur fitness:</span>
+            <span id="bestFitnessValue" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Fitness moyen:</span>
+            <span id="avgFitnessValue" class="stat-value">0</span>
+          </div>
+        </div>
+        <div id="chartContainer">
+          <canvas id="fitnessChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Panneau de configuration à droite -->      
       <div class="simulation-config">
         <h2>Configuration</h2>
         <form id="configForm">
@@ -55,37 +91,6 @@
           </div>
           <button type="submit" class="btn btn-primary">Appliquer</button>
         </form>
-      </div>
-    </div>
-    
-    <div class="simulation-container">
-      <canvas id="simulationCanvas"></canvas>
-      
-      <div class="stats-container">
-        <h2>Statistiques</h2>
-        <div class="stat-group">
-          <div class="stat">
-            <span class="stat-label">Génération:</span>
-            <span id="generationValue" class="stat-value">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Population:</span>
-            <span id="populationValue" class="stat-value">0</span>
-          </div>
-        </div>
-        <div class="stat-group">
-          <div class="stat">
-            <span class="stat-label">Meilleur fitness:</span>
-            <span id="bestFitnessValue" class="stat-value">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Fitness moyen:</span>
-            <span id="avgFitnessValue" class="stat-value">0</span>
-          </div>
-        </div>
-        <div id="chartContainer">
-          <canvas id="fitnessChart"></canvas>
-        </div>
       </div>
     </div>
     
