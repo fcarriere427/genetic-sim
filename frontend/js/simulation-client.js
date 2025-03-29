@@ -4,8 +4,21 @@
  */
 class SimulationClient {
   constructor() {
-    // Connexion Socket.IO avec options explicites
-    this.socket = io({
+    // // Connexion Socket.IO avec options explicites
+    // this.socket = io({
+    //   reconnectionAttempts: 5,
+    //   timeout: 10000,
+    //   transports: ['websocket', 'polling']
+    // });
+
+    // Vérifier que io est défini avant de l'utiliser
+    if (typeof io === 'undefined') {
+      console.error('Socket.IO n\'est pas chargé. Vérifiez la connexion au réseau ou le chargement de la bibliothèque.');
+      return;
+    }
+    
+    // Connexion Socket.IO avec options explicites et URL explicite
+    this.socket = io(window.location.origin, {
       reconnectionAttempts: 5,
       timeout: 10000,
       transports: ['websocket', 'polling']
