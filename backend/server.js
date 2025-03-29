@@ -3,7 +3,6 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const cors = require('cors');
-const dbManager = require('../database/db-manager');
 const simulationEngine = require('./simulation-engine');
 
 // Initialisation de l'application Express
@@ -27,26 +26,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// API pour obtenir les résultats des simulations précédentes
-app.get('/api/simulations', async (req, res) => {
-  try {
-    const simulations = await dbManager.getSimulations();
-    res.json(simulations);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// API pour sauvegarder une simulation
-app.post('/api/simulations', async (req, res) => {
-  try {
-    const { name, data } = req.body;
-    const id = await dbManager.saveSimulation(name, data);
-    res.json({ id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Routes API supprimées - fonctionnalité de sauvegarde non requise
 
 // Gestion des connexions Socket.IO
 io.on('connection', (socket) => {
@@ -116,5 +96,4 @@ setInterval(() => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
-  dbManager.initDatabase();
 });

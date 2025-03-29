@@ -18,8 +18,6 @@ class UIController {
     this.configForm = document.getElementById('configForm');
     this.mutationRateSlider = document.getElementById('mutationRate');
     this.mutationRateValue = document.getElementById('mutationRateValue');
-    this.simulationHistory = document.getElementById('simulationHistory');
-    
     // Éléments d'affichage des statistiques
     this.generationValue = document.getElementById('generationValue');
     this.populationValue = document.getElementById('populationValue');
@@ -28,9 +26,6 @@ class UIController {
     
     // Initialiser les écouteurs d'événements
     this.initEventListeners();
-    
-    // Charger l'historique des simulations
-    this.loadSimulationHistory();
   }
   
   /**
@@ -108,10 +103,6 @@ class UIController {
     this.startButton.textContent = 'Reprendre';
     this.startButton.disabled = true;
     this.pauseButton.disabled = false;
-    
-    // Sauvegarder la simulation
-    const simulationName = document.getElementById('simulationName').value;
-    this.simulationClient.saveSimulation(simulationName);
   }
   
   /**
@@ -176,64 +167,5 @@ class UIController {
     }
   }
   
-  /**
-   * Charge et affiche l'historique des simulations
-   */
-  async loadSimulationHistory() {
-    const simulations = await this.simulationClient.loadSimulationHistory();
-    
-    if (simulations.length === 0) {
-      this.simulationHistory.innerHTML = '<p>Aucune simulation sauvegardée.</p>';
-      return;
-    }
-    
-    let html = '';
-    simulations.forEach(sim => {
-      const date = new Date(sim.date_created).toLocaleString();
-      html += `
-        <div class="simulation-record" data-id="${sim.id}">
-          <h3>${sim.name}</h3>
-          <div class="simulation-date">${date}</div>
-        </div>
-      `;
-    });
-    
-    this.simulationHistory.innerHTML = html;
-    
-    // Ajouter des écouteurs pour charger les simulations
-    document.querySelectorAll('.simulation-record').forEach(element => {
-      element.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.id;
-        this.loadSimulation(id);
-      });
-    });
-  }
-  
-  /**
-   * Charge une simulation sauvegardée
-   */
-  async loadSimulation(id) {
-    try {
-      const response = await fetch(`/api/simulations/${id}`);
-      const simulation = await response.json();
-      
-      // Remplir le formulaire avec la configuration
-      const config = JSON.parse(simulation.config);
-      
-      document.getElementById('populationSize').value = config.populationSize || 20;
-      document.getElementById('mutationRate').value = config.mutationRate || 0.05;
-      document.getElementById('foodAmount').value = config.foodAmount || 30;
-      document.getElementById('obstacleAmount').value = config.obstacleAmount || 5;
-      document.getElementById('simulationName').value = simulation.name;
-      
-      // Mettre à jour les affichages
-      this.mutationRateValue.textContent = Math.round((config.mutationRate || 0.05) * 100) + '%';
-      
-      // Prêt à démarrer la simulation
-      this.resetSimulation();
-      
-    } catch (error) {
-      console.error('Erreur lors du chargement de la simulation:', error);
-    }
-  }
+  // Fonctionalités de chargement et sauvegarde de simulation supprimées
 }

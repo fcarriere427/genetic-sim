@@ -140,72 +140,7 @@ class SimulationClient {
     this.onUpdateCallback = callback;
   }
   
-  /**
-   * Charger l'historique des simulations depuis le serveur
-   */
-  async loadSimulationHistory() {
-    try {
-      const url = `${this.apiPrefix}/api/simulations`;
-      console.log('Chargement de l\'historique depuis:', url);
-      const response = await fetch(url);
-    
-      if (!response.ok) {
-        console.warn('Réponse non-OK du serveur:', response.status);
-        return [];
-      }
-      
-      // Vérifier le type de contenu
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.warn('Réponse non-JSON reçue:', contentType);
-        return [];
-      }
-      
-      this.simulationHistory = await response.json();
-      console.log('Historique chargé avec succès:', this.simulationHistory);
-      return this.simulationHistory;
-    } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique:', error);
-      return [];
-    }
-  }
-
-
-  /**
-   * Sauvegarder la simulation actuelle
-   * @param {string} name - Nom de la simulation
-   */
-  async saveSimulation(name) {
-    if (!this.simulationState) {
-      console.warn('Impossible de sauvegarder: pas de simulation active');
-      return null;
-    }
-    
-    try {
-      const url = `${this.apiPrefix}/api/simulations`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name,
-          data: this.simulationState.config || {}
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('Simulation sauvegardée avec ID:', result.id);
-      return result.id;
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      return null;
-    }
-  }
+  // Fonctionalités de sauvegarde et de chargement de l'historique supprimées
   
   /**
    * Initialiser le graphique d'évolution de fitness
