@@ -4,26 +4,25 @@
  */
 class SimulationClient {
   constructor() {
-    // // Connexion Socket.IO avec options explicites
-    // this.socket = io({
-    //   reconnectionAttempts: 5,
-    //   timeout: 10000,
-    //   transports: ['websocket', 'polling']
-    // });
-
+    console.log("Tentative de connexion Socket.IO à:", window.location.origin);
     // Vérifier que io est défini avant de l'utiliser
     if (typeof io === 'undefined') {
       console.error('Socket.IO n\'est pas chargé. Vérifiez la connexion au réseau ou le chargement de la bibliothèque.');
       return;
     }
     
-    // Connexion Socket.IO avec options explicites et URL explicite
+    // !!! Déterminer l'URL de base pour Socket.IO = dépend de la configuration NGINX
+    const path = window.location.pathname.startsWith('/genetic') ? '/genetic/socket.io' : '/socket.io';
+  
+    // Connexion Socket.IO - définir explicitement l'URL du serveur local
     this.socket = io(window.location.origin, {
+      path: path,
       reconnectionAttempts: 5,
       timeout: 10000,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
     });
-    
+    console.log("Tentative de connexion Socket.IO à:", window.location.origin, "avec path:", path);
+        
     // Fonction de rappel pour les mises à jour
     this.onUpdateCallback = null;
     

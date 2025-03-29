@@ -6,10 +6,14 @@ const cors = require('cors');
 const dbManager = require('../database/db-manager');
 const simulationEngine = require('./simulation-engine');
 
+// Déterminer si on est en production (derrière proxy nginx)
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Initialisation de l'application Express
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
+  path: isProduction ? '/genetic/socket.io' : '/socket.io',
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
