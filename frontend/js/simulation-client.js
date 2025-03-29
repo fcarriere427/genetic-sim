@@ -4,6 +4,11 @@
  */
 class SimulationClient {
   constructor() {
+
+    // Déterminer l'URL de base pour Socket.IO et les API
+    this.apiPrefix = window.location.pathname.startsWith('/genetic') ? '/genetic' : '';
+    const socketPath = this.apiPrefix + '/socket.io';
+
     // Vérifier que io est défini avant de l'utiliser
     if (typeof io === 'undefined') {
       console.error('Socket.IO n\'est pas chargé. Vérifiez la connexion au réseau ou le chargement de la bibliothèque.');
@@ -125,9 +130,10 @@ class SimulationClient {
    */
   async loadSimulationHistory() {
     try {
-      console.log('Tentative de chargement de l\'historique...');
-      const response = await fetch('/api/simulations');
-      
+      const url = `${this.apiPrefix}/api/simulations`;
+      console.log('Chargement de l\'historique depuis:', url);
+      const response = await fetch(url);
+    
       if (!response.ok) {
         console.warn('Réponse non-OK du serveur:', response.status);
         return [];
@@ -161,7 +167,8 @@ class SimulationClient {
     }
     
     try {
-      const response = await fetch('/api/simulations', {
+      const url = `${this.apiPrefix}/api/simulations`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
