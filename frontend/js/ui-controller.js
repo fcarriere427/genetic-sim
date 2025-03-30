@@ -165,6 +165,200 @@ class UIController {
       this.bestFitnessValue.textContent = Math.round(state.statistics.bestFitness);
       this.avgFitnessValue.textContent = Math.round(state.statistics.averageFitness);
     }
+    
+    // Mettre à jour les informations des champions
+    this.updateChampionInfo(state);
+  }
+  
+  /**
+   * Met à jour les informations des champions dans l'interface
+   */
+  updateChampionInfo(state) {
+    const { allTimeBestOrganism, currentBestOrganism } = state;
+    
+    // S'il n'y a pas de champions, ne rien faire
+    if (!allTimeBestOrganism && !currentBestOrganism) return;
+    
+    // Chercher ou créer le conteneur pour les champions
+    let champContainer = document.getElementById('championInfo');
+    if (!champContainer) {
+      // Créer le conteneur pour les champions s'il n'existe pas
+      const statsContainer = document.querySelector('.stats-container');
+      champContainer = document.createElement('div');
+      champContainer.id = 'championInfo';
+      champContainer.className = 'champion-info';
+      statsContainer.appendChild(champContainer);
+      
+      // Appliquer un style
+      const style = document.createElement('style');
+      style.textContent = `
+        .champion-info {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #ddd;
+        }
+        .champion-card {
+          background-color: #2c3e50;
+          border-radius: 4px;
+          margin-bottom: 0.5rem;
+          padding: 0.5rem;
+          position: relative;
+        }
+        .champion-title {
+          font-weight: bold;
+          margin-bottom: 0.25rem;
+          display: flex;
+          align-items: center;
+        }
+        .champion-color {
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          margin-right: 5px;
+        }
+        .champion-star {
+          margin-left: 5px;
+          color: gold;
+        }
+        .champion-silver-star {
+          margin-left: 5px;
+          color: silver;
+        }
+        .champion-stats {
+          display: flex;
+          flex-wrap: wrap;
+          font-size: 0.85rem;
+          color: #ddd;
+        }
+        .champion-stat {
+          margin-right: 10px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    champContainer.innerHTML = ''; // Vider le conteneur
+    
+    // Ajouter le titre général
+    const title = document.createElement('h3');
+    title.textContent = 'Champions';
+    title.style.marginBottom = '0.5rem';
+    champContainer.appendChild(title);
+    
+    // Ajouter le champion de tous les temps
+    if (allTimeBestOrganism) {
+      const champCard = document.createElement('div');
+      champCard.className = 'champion-card';
+      
+      // Titre avec couleur
+      const champTitle = document.createElement('div');
+      champTitle.className = 'champion-title';
+      
+      // Cercle coloré représentant la couleur du champion
+      const colorSpan = document.createElement('span');
+      colorSpan.className = 'champion-color';
+      colorSpan.style.backgroundColor = `rgb(${allTimeBestOrganism.genome.color[0]}, ${allTimeBestOrganism.genome.color[1]}, ${allTimeBestOrganism.genome.color[2]})`;
+      champTitle.appendChild(colorSpan);
+      
+      // Texte du titre
+      const titleText = document.createElement('span');
+      titleText.textContent = 'Champion historique';
+      champTitle.appendChild(titleText);
+      
+      // Étoile dorée
+      const star = document.createElement('span');
+      star.className = 'champion-star';
+      star.textContent = '★'; // Étoile pleine
+      champTitle.appendChild(star);
+      
+      champCard.appendChild(champTitle);
+      
+      // Statistiques du champion
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'champion-stats';
+      
+      // Génération
+      const genStat = document.createElement('div');
+      genStat.className = 'champion-stat';
+      genStat.textContent = `Gén: ${allTimeBestOrganism.generation || 'N/A'}`;
+      statsDiv.appendChild(genStat);
+      
+      // Fitness
+      const fitnessStat = document.createElement('div');
+      fitnessStat.className = 'champion-stat';
+      fitnessStat.textContent = `Fitness: ${Math.round(allTimeBestOrganism.fitness)}`;
+      statsDiv.appendChild(fitnessStat);
+      
+      // Taille
+      const sizeStat = document.createElement('div');
+      sizeStat.className = 'champion-stat';
+      sizeStat.textContent = `Taille: ${allTimeBestOrganism.genome.size.toFixed(1)}`;
+      statsDiv.appendChild(sizeStat);
+      
+      // Vitesse
+      const speedStat = document.createElement('div');
+      speedStat.className = 'champion-stat';
+      speedStat.textContent = `Vitesse: ${allTimeBestOrganism.genome.speed.toFixed(1)}`;
+      statsDiv.appendChild(speedStat);
+      
+      champCard.appendChild(statsDiv);
+      champContainer.appendChild(champCard);
+    }
+    
+    // Ajouter le champion actuel si différent du champion historique
+    if (currentBestOrganism && (!allTimeBestOrganism || currentBestOrganism.id !== allTimeBestOrganism.id)) {
+      const champCard = document.createElement('div');
+      champCard.className = 'champion-card';
+      
+      // Titre avec couleur
+      const champTitle = document.createElement('div');
+      champTitle.className = 'champion-title';
+      
+      // Cercle coloré représentant la couleur du champion
+      const colorSpan = document.createElement('span');
+      colorSpan.className = 'champion-color';
+      colorSpan.style.backgroundColor = `rgb(${currentBestOrganism.genome.color[0]}, ${currentBestOrganism.genome.color[1]}, ${currentBestOrganism.genome.color[2]})`;
+      champTitle.appendChild(colorSpan);
+      
+      // Texte du titre
+      const titleText = document.createElement('span');
+      titleText.textContent = 'Champion actuel';
+      champTitle.appendChild(titleText);
+      
+      // Étoile argentée
+      const star = document.createElement('span');
+      star.className = 'champion-silver-star';
+      star.textContent = '☆'; // Étoile vide
+      champTitle.appendChild(star);
+      
+      champCard.appendChild(champTitle);
+      
+      // Statistiques du champion
+      const statsDiv = document.createElement('div');
+      statsDiv.className = 'champion-stats';
+      
+      // Fitness
+      const fitnessStat = document.createElement('div');
+      fitnessStat.className = 'champion-stat';
+      fitnessStat.textContent = `Fitness: ${Math.round(currentBestOrganism.fitness)}`;
+      statsDiv.appendChild(fitnessStat);
+      
+      // Taille
+      const sizeStat = document.createElement('div');
+      sizeStat.className = 'champion-stat';
+      sizeStat.textContent = `Taille: ${currentBestOrganism.genome.size.toFixed(1)}`;
+      statsDiv.appendChild(sizeStat);
+      
+      // Vitesse
+      const speedStat = document.createElement('div');
+      speedStat.className = 'champion-stat';
+      speedStat.textContent = `Vitesse: ${currentBestOrganism.genome.speed.toFixed(1)}`;
+      statsDiv.appendChild(speedStat);
+      
+      champCard.appendChild(statsDiv);
+      champContainer.appendChild(champCard);
+    }
   }
   
   // Fonctionalités de chargement et sauvegarde de simulation supprimées

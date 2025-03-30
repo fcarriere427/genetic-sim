@@ -6,6 +6,7 @@ class SimulationRenderer {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
     this.resizeCanvas();
+    this.simulationState = null; // État de la simulation
     
     // Redimensionnement du canvas lors du redimensionnement de la fenêtre
     window.addEventListener('resize', () => this.resizeCanvas());
@@ -35,6 +36,9 @@ class SimulationRenderer {
   render(simulationState) {
     if (!simulationState) return;
     
+    // Stocker l'état de la simulation
+    this.simulationState = simulationState;
+    
     this.clear();
     
     // Dimensionner l'environnement au canvas
@@ -52,6 +56,9 @@ class SimulationRenderer {
     
     // Afficher la génération actuelle
     this.renderGenerationInfo(simulationState.generation);
+    
+    // Afficher les informations des champions
+    this.renderChampionInfo();
   }
   
   /**
@@ -94,9 +101,17 @@ class SimulationRenderer {
    * Dessine les organismes
    */
   renderOrganisms(organisms, scaleX, scaleY) {
+    // D'abord, dessiner tous les organismes normaux
     organisms.forEach(organism => {
       if (organism.isDead) return;
       
+      // Vérifier si l'organisme est un champion
+      const isCurrentBest = organism.id === this.simulationState?.currentBestOrganism?.id;
+      const isAllTimeBest = organism.id === this.simulationState?.allTimeBestOrganism?.id;
+      
+      // Si c'est un champion, on le dessinera dans une itération séparée
+      if (isCurrentBest || isAllTimeBest) return;
+
       // Couleur basée sur le génome
       let color;
       
@@ -167,6 +182,107 @@ class SimulationRenderer {
         energyBarHeight
       );
     });
+    
+    // Maintenant, dessiner les champions par-dessus
+    organisms.forEach(organism => {
+      if (organism.isDead) return;
+      
+      // Vérifier si l'organisme est un champion
+      const isCurrentBest = organism.id === this.simulationState?.currentBestOrganism?.id;
+      const isAllTimeBest = organism.id === this.simulationState?.allTimeBestOrganism?.id;
+      
+      // Ne dessiner que les champions dans cette itération
+      if (!isCurrentBest && !isAllTimeBest) return;
+
+      // Dessiner une aura autour des champions
+      if (isAllTimeBest) {
+        // Aura dorée pour le meilleur de tous les temps
+        this.ctx.shadowColor = 'gold';
+        this.ctx.shadowBlur = 20;
+        this.ctx.strokeStyle = 'gold';
+        this.ctx.lineWidth = 3;
+      } else if (isCurrentBest) {
+        // Aura argentée pour le meilleur actuel
+        this.ctx.shadowColor = 'silver';
+        this.ctx.shadowBlur = 15;
+        this.ctx.strokeStyle = 'silver';
+        this.ctx.lineWidth = 2;
+      }
+      
+      // Dessiner l'aura
+      this.ctx.beginPath();
+      this.ctx.arc(
+        organism.x * scaleX,
+        organism.y * scaleY,
+        (organism.genome.size + 5) * scaleX,
+        0,
+        Math.PI * 2
+      );
+      this.ctx.stroke();
+      
+      // Réinitialiser les effets d'ombre
+      this.ctx.shadowColor = 'transparent';
+      this.ctx.shadowBlur = 0;
+      
+      // Couleur de base de l'organisme
+      let color = `rgb(${organism.genome.color[0]}, ${organism.genome.color[1]}, ${organism.genome.color[2]})`;
+      
+      // Corps
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.arc(
+        organism.x * scaleX,
+        organism.y * scaleY,
+        organism.genome.size * scaleX,
+        0,
+        Math.PI * 2
+      );
+      this.ctx.fill();
+      
+      // Direction (nez)
+      this.ctx.strokeStyle = isAllTimeBest ? 'gold' : 'white';
+      this.ctx.lineWidth = isAllTimeBest ? 3 : 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(
+        organism.x * scaleX,
+        organism.y * scaleY
+      );
+      this.ctx.lineTo(
+        (organism.x + Math.cos(organism.direction) * organism.genome.size) * scaleX,
+        (organism.y + Math.sin(organism.direction) * organism.genome.size) * scaleY
+      );
+      this.ctx.stroke();
+      
+      // Ajouter une couronne ou un indicateur
+      this.ctx.fillStyle = isAllTimeBest ? 'gold' : 'silver';
+      this.ctx.font = '14px Arial';
+      this.ctx.fillText(
+        isAllTimeBest ? '★' : '☆', // Étoile pleine ou vide
+        organism.x * scaleX,
+        (organism.y - organism.genome.size - 10) * scaleY
+      );
+      
+      // Barre d'énergie
+      const energyPercentage = organism.energy / (organism.genome.reproductionThreshold * 1.2);
+      const energyBarWidth = organism.genome.size * 2 * scaleX;
+      const energyBarHeight = 4; // Légèrement plus grande pour les champions
+      
+      this.ctx.fillStyle = '#ddd';
+      this.ctx.fillRect(
+        (organism.x - organism.genome.size) * scaleX,
+        (organism.y - organism.genome.size - 5) * scaleY,
+        energyBarWidth,
+        energyBarHeight
+      );
+      
+      this.ctx.fillStyle = isAllTimeBest ? 'gold' : '#2ecc71';
+      this.ctx.fillRect(
+        (organism.x - organism.genome.size) * scaleX,
+        (organism.y - organism.genome.size - 5) * scaleY,
+        energyBarWidth * Math.min(1, energyPercentage),
+        energyBarHeight
+      );
+    });
   }
   
   /**
@@ -176,5 +292,74 @@ class SimulationRenderer {
     this.ctx.fillStyle = '#fff';
     this.ctx.font = '14px Arial';
     this.ctx.fillText(`Génération: ${generation}`, 10, 20);
+  }
+  
+  /**
+   * Affiche les informations des champions
+   */
+  renderChampionInfo() {
+    if (!this.simulationState) return;
+    
+    const { allTimeBestOrganism, currentBestOrganism } = this.simulationState;
+    if (!allTimeBestOrganism && !currentBestOrganism) return;
+    
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '12px Arial';
+    
+    let y = 40; // Position verticale
+    
+    // Afficher le champion de tous les temps
+    if (allTimeBestOrganism) {
+      this.ctx.fillText('Champion historique:', 10, y);
+      y += 20;
+      
+      // Dessiner un petit cercle de la couleur du champion
+      const color = `rgb(${allTimeBestOrganism.genome.color[0]}, ${allTimeBestOrganism.genome.color[1]}, ${allTimeBestOrganism.genome.color[2]})`;
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.arc(15, y - 5, 5, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Dessiner une étoile dorée à côté
+      this.ctx.fillStyle = 'gold';
+      this.ctx.font = '12px Arial';
+      this.ctx.fillText('★', 25, y); // Étoile dorée
+      
+      // Informations sur le champion
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillText(`Fitness: ${Math.round(allTimeBestOrganism.fitness)}`, 40, y);
+      y += 15;
+      this.ctx.fillText(`Gén: ${allTimeBestOrganism.generation || 'N/A'}`, 40, y);
+      y += 15;
+      this.ctx.fillText(`Taille: ${allTimeBestOrganism.genome.size.toFixed(1)}`, 40, y);
+      y += 15;
+      this.ctx.fillText(`Vitesse: ${allTimeBestOrganism.genome.speed.toFixed(1)}`, 40, y);
+      y += 25;
+    }
+    
+    // Afficher le champion actuel
+    if (currentBestOrganism && (!allTimeBestOrganism || currentBestOrganism.id !== allTimeBestOrganism.id)) {
+      this.ctx.fillText('Champion actuel:', 10, y);
+      y += 20;
+      
+      // Dessiner un petit cercle de la couleur du champion
+      const color = `rgb(${currentBestOrganism.genome.color[0]}, ${currentBestOrganism.genome.color[1]}, ${currentBestOrganism.genome.color[2]})`;
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.arc(15, y - 5, 5, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Dessiner une étoile argentée à côté
+      this.ctx.fillStyle = 'silver';
+      this.ctx.fillText('☆', 25, y); // Étoile vide argentée
+      
+      // Informations sur le champion
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillText(`Fitness: ${Math.round(currentBestOrganism.fitness)}`, 40, y);
+      y += 15;
+      this.ctx.fillText(`Taille: ${currentBestOrganism.genome.size.toFixed(1)}`, 40, y);
+      y += 15;
+      this.ctx.fillText(`Vitesse: ${currentBestOrganism.genome.speed.toFixed(1)}`, 40, y);
+    }
   }
 }

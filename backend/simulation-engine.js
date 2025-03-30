@@ -50,6 +50,8 @@ function createSimulation(config = {}) {
     generationAge: 0,  // Suivre l'âge d'une génération
     generationMaxAge: 1000, // Durée de vie maximale d'une génération
     fitnessHistory: [],  // Historique des fitness pour la génération actuelle
+    allTimeBestOrganism: null, // Meilleur organisme de tous les temps
+    currentBestOrganism: null, // Meilleur organisme vivant actuellement
     statistics: {
       bestFitness: 0,
       averageFitness: 0,
@@ -563,6 +565,21 @@ function updateStatistics(simulation) {
     averageFitness,
     worstFitness: Math.min(...fitnesses) // Fitness le plus bas parmi les organismes actuels
   };
+  
+  // Mettre à jour le meilleur organisme actuel
+  if (fitnesses.length > 0) {
+    const bestIndex = fitnesses.indexOf(Math.max(...fitnesses));
+    simulation.currentBestOrganism = { ...simulation.population[bestIndex] };
+    simulation.currentBestOrganism.isCurrentBest = true;
+    
+    // Mettre à jour le meilleur organisme de tous les temps si nécessaire
+    if (!simulation.allTimeBestOrganism || 
+        simulation.currentBestOrganism.fitness > simulation.allTimeBestOrganism.fitness) {
+      simulation.allTimeBestOrganism = { ...simulation.currentBestOrganism };
+      simulation.allTimeBestOrganism.isAllTimeBest = true;
+      simulation.allTimeBestOrganism.generation = simulation.generation;
+    }
+  }
 }
 
 /**
