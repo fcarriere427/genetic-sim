@@ -17,7 +17,7 @@ const DEFAULT_CONFIG = {
 
 // État global de la simulation
 let isPaused = false;
-let simulationSpeed = 1;
+let simulationSpeed = 5; // Vitesse augmentée à 5 (au lieu de 1)
 
 /**
  * Crée un nouvel environnement de simulation
