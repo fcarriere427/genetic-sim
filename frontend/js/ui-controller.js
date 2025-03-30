@@ -303,6 +303,77 @@ class UIController {
       statsDiv.appendChild(speedStat);
       
       champCard.appendChild(statsDiv);
+      
+      // Ajouter un bouton pour afficher/masquer les détails du génome
+      const toggleButton = document.createElement('button');
+      toggleButton.className = 'btn btn-secondary btn-sm';
+      toggleButton.style.fontSize = '0.7rem';
+      toggleButton.style.padding = '2px 5px';
+      toggleButton.style.marginTop = '5px';
+      toggleButton.style.width = '100%';
+      toggleButton.textContent = 'Afficher le génome complet';
+      
+      // Conteneur pour les détails du génome (masqué par défaut)
+      const genomeDetails = document.createElement('div');
+      genomeDetails.className = 'genome-details';
+      genomeDetails.style.display = 'none';
+      genomeDetails.style.marginTop = '8px';
+      genomeDetails.style.padding = '8px';
+      genomeDetails.style.backgroundColor = '#1a2634';
+      genomeDetails.style.borderRadius = '4px';
+      genomeDetails.style.fontSize = '0.8rem';
+      
+      // Ajouter chaque propriété du génome
+      const genome = allTimeBestOrganism.genome;
+      const genomeProps = [
+        { name: 'Vitesse', value: genome.speed.toFixed(2) },
+        { name: 'Portée de détection', value: genome.sensorRange.toFixed(1) },
+        { name: 'Taille', value: genome.size.toFixed(2) },
+        { name: 'Métabolisme', value: genome.metabolism.toFixed(3) },
+        { name: 'Couleur', value: `RGB(${genome.color.join(', ')})` },
+        { name: 'Seuil de reproduction', value: genome.reproductionThreshold.toFixed(1) },
+        { name: 'Agressivité', value: genome.aggressiveness.toFixed(2) }
+      ];
+      
+      // Créer une table pour afficher le génome
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+      
+      // Ajouter chaque propriété en ligne
+      genomeProps.forEach(prop => {
+        const row = document.createElement('tr');
+        
+        const nameCell = document.createElement('td');
+        nameCell.textContent = prop.name;
+        nameCell.style.paddingRight = '10px';
+        nameCell.style.fontWeight = 'bold';
+        row.appendChild(nameCell);
+        
+        const valueCell = document.createElement('td');
+        valueCell.textContent = prop.value;
+        row.appendChild(valueCell);
+        
+        table.appendChild(row);
+      });
+      
+      genomeDetails.appendChild(table);
+      
+      // Ajouter le bouton et les détails au panneau
+      champCard.appendChild(toggleButton);
+      champCard.appendChild(genomeDetails);
+      
+      // Gérer l'affichage/masquage des détails
+      toggleButton.addEventListener('click', () => {
+        if (genomeDetails.style.display === 'none') {
+          genomeDetails.style.display = 'block';
+          toggleButton.textContent = 'Masquer le génome';
+        } else {
+          genomeDetails.style.display = 'none';
+          toggleButton.textContent = 'Afficher le génome complet';
+        }
+      });
+      
       champContainer.appendChild(champCard);
     }
     
