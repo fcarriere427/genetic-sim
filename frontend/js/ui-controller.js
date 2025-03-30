@@ -209,6 +209,7 @@ class UIController {
           margin-bottom: 0.25rem;
           display: flex;
           align-items: center;
+          color: #ffffff; /* Texte en blanc pour meilleure lisibilité */
         }
         .champion-color {
           display: inline-block;
@@ -229,7 +230,7 @@ class UIController {
           display: flex;
           flex-wrap: wrap;
           font-size: 0.85rem;
-          color: #ddd;
+          color: #ffffff; /* Texte plus clair pour les statistiques */
         }
         .champion-stat {
           margin-right: 10px;
@@ -306,11 +307,13 @@ class UIController {
       
       // Ajouter un bouton pour afficher/masquer les détails du génome
       const toggleButton = document.createElement('button');
-      toggleButton.className = 'btn btn-secondary btn-sm';
+      toggleButton.type = 'button'; // Assurez-vous que le type est bien 'button'
+      toggleButton.className = 'btn btn-secondary btn-sm toggle-genome';
       toggleButton.style.fontSize = '0.7rem';
       toggleButton.style.padding = '2px 5px';
       toggleButton.style.marginTop = '5px';
       toggleButton.style.width = '100%';
+      toggleButton.style.cursor = 'pointer';
       toggleButton.textContent = 'Afficher le génome complet';
       
       // Conteneur pour les détails du génome (masqué par défaut)
@@ -322,6 +325,7 @@ class UIController {
       genomeDetails.style.backgroundColor = '#1a2634';
       genomeDetails.style.borderRadius = '4px';
       genomeDetails.style.fontSize = '0.8rem';
+      genomeDetails.style.color = '#ffffff'; // Texte blanc pour meilleure lisibilité
       
       // Ajouter chaque propriété du génome
       const genome = allTimeBestOrganism.genome;
@@ -364,15 +368,18 @@ class UIController {
       champCard.appendChild(genomeDetails);
       
       // Gérer l'affichage/masquage des détails
-      toggleButton.addEventListener('click', () => {
-        if (genomeDetails.style.display === 'none') {
-          genomeDetails.style.display = 'block';
-          toggleButton.textContent = 'Masquer le génome';
+      // Utilisons une fonction séparée pour éviter les fermetures et les problèmes de portée
+      toggleButton.onclick = function() {
+        const details = this.nextElementSibling; // Génome détails est l'élément suivant après le bouton
+        if (details.style.display === 'none') {
+          details.style.display = 'block';
+          this.textContent = 'Masquer le génome';
         } else {
-          genomeDetails.style.display = 'none';
-          toggleButton.textContent = 'Afficher le génome complet';
+          details.style.display = 'none';
+          this.textContent = 'Afficher le génome complet';
         }
-      });
+        return false; // Empêcher le comportement par défaut
+      };
       
       champContainer.appendChild(champCard);
     }
