@@ -305,27 +305,22 @@ class UIController {
       
       champCard.appendChild(statsDiv);
       
-      // Ajouter un bouton pour afficher/masquer les détails du génome
-      const toggleButton = document.createElement('button');
-      toggleButton.type = 'button'; // Assurez-vous que le type est bien 'button'
-      toggleButton.className = 'btn btn-secondary btn-sm toggle-genome';
-      toggleButton.style.fontSize = '0.7rem';
-      toggleButton.style.padding = '2px 5px';
-      toggleButton.style.marginTop = '5px';
-      toggleButton.style.width = '100%';
-      toggleButton.style.cursor = 'pointer';
-      toggleButton.textContent = 'Afficher le génome complet';
-      
-      // Conteneur pour les détails du génome (masqué par défaut)
+      // Conteneur pour les détails du génome (toujours visible)
       const genomeDetails = document.createElement('div');
       genomeDetails.className = 'genome-details';
-      genomeDetails.style.display = 'none';
       genomeDetails.style.marginTop = '8px';
       genomeDetails.style.padding = '8px';
       genomeDetails.style.backgroundColor = '#1a2634';
       genomeDetails.style.borderRadius = '4px';
       genomeDetails.style.fontSize = '0.8rem';
       genomeDetails.style.color = '#ffffff'; // Texte blanc pour meilleure lisibilité
+      
+      // Titre pour la section
+      const genomeTitle = document.createElement('div');
+      genomeTitle.textContent = 'Génome complet';
+      genomeTitle.style.fontWeight = 'bold';
+      genomeTitle.style.marginBottom = '5px';
+      genomeDetails.appendChild(genomeTitle);
       
       // Ajouter chaque propriété du génome
       const genome = allTimeBestOrganism.genome;
@@ -362,24 +357,7 @@ class UIController {
       });
       
       genomeDetails.appendChild(table);
-      
-      // Ajouter le bouton et les détails au panneau
-      champCard.appendChild(toggleButton);
       champCard.appendChild(genomeDetails);
-      
-      // Gérer l'affichage/masquage des détails
-      // Utilisons une fonction séparée pour éviter les fermetures et les problèmes de portée
-      toggleButton.onclick = function() {
-        const details = this.nextElementSibling; // Génome détails est l'élément suivant après le bouton
-        if (details.style.display === 'none') {
-          details.style.display = 'block';
-          this.textContent = 'Masquer le génome';
-        } else {
-          details.style.display = 'none';
-          this.textContent = 'Afficher le génome complet';
-        }
-        return false; // Empêcher le comportement par défaut
-      };
       
       champContainer.appendChild(champCard);
     }
